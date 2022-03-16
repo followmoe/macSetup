@@ -1,6 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+#set verbose mode 
+set -x
+# Checks if executable exists in current path
+command_exists () {
+  command -v "$1" > /dev/null 2>&1;
+}
 
 # Ask for the administrator password upfront
+echo "need admin pw for everything"
 sudo -v
 
 # root check
@@ -9,18 +17,30 @@ if (( $EUID != 0 )); then
     exit
 fi
 
-echo 'PATH="/usr/local/bin:$PATH"' >> ~/.zshrc
-xcode-select --install
 
-#install brew
-curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh
-# Install command-line tools using Homebrew.
 
-# Make sure we’re using the latest Homebrew.
-brew update
+if ! command_exists xcode-select
+then
+    echo "installing xcode commandline tools"
+    xcode-select --install
+else
+    echo "xcode comandline tools already installed"
 
-# Upgrade any already-installed formulae.
+# Check if Homebrew is available
+if ! command_exists brew
+then
+  echo 'Homebrew not found, will installing it'
+  echo "install brew"
+  curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh
+else
+  echo "Update Homebrew ..."
+  brew update
+fi
+
+ech "upgrading brew formulae"
 brew upgrade
+
+echo "installing tools"
 brew install vim --with-override-system-vi
 brew install grep
 brew install cocoapods
@@ -29,30 +49,45 @@ brew install tree
 brew install htop
 brew install git
 brew install zsh
-brew cask install iterm2
-brew cask install sourcetree
-brew cask install 1password
-brew cask install rectangle
-brew cask install visual-studio-code
-brew cask install macdown
-brew cask install notion
-brew install mas
-brew cask install slack
-brew cask install iina
+brew install robotsandpencils/made/xcodes
+brew install aria2
 
+echo "installing casks"
+brew install --cask iterm2
+brew install --cask 1password
+brew install --cask rectangle
+brew install --cask visual-studio-code
+brew install --cask chrome
+brew install --cask deepl
+brew install --cask iina
+brew install --cask spotify
+brew install --cask beekeeper-studio
+brew install --cask gitkraken
+brew install --cask xcodes
+
+echo "install fira font"
 brew tap homebrew/cask-fonts
-brew cask install font-fira-code
+brew install --cask font-fira-code
 
+echo "clean up"
 brew cleanup
 
-echo "dont forget to install chrome"
-# curl -fsSL https://updates.cdn-apple.com/2019/cert/061-41823-20191025-5efc5a59-d7dc-46d3-9096-396bb8cb4a73/SwiftRuntimeForCommandLineTools.dmg
-curl -fsSL https://raw.githubusercontent.com/guarinogabriel/mac-cli/master/mac-cli/tools/install
-curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+echo "install oh my zsh"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
+echo "generate xcodes comandline completions"
+mkdir ~/.oh-my-zsh/completions
+xcodes --generate-completion-script > ~/.oh-my-zsh/completions/_xcodes
 
+echo "installing latest xcode"
+xcodes install --latest --experimental-unxip
 
-# install brew casks and important apps
-# set macos options
+echo "updating path"
+echo 'PATH="/usr/local/bin:$PATH"' >> ~/.zshrc
+
+# curl -fsSL https://github.com/twostraws/ControlRoom.git
+# git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+
+echo "dont forgett to install Icon Set Generator, Amphetamine Craft from App Store!"
+
 #./.macos
